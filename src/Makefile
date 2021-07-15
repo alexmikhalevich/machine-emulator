@@ -191,16 +191,26 @@ generate: CXXFLAGS += -fprofile-generate
 generate: SOLDFLAGS += -fprofile-generate
 generate: luacartesi
 
-cov: CXXFLAGS += -O0 -g -fprofile-arcs -ftest-coverage
-cov: SOLDFLAGS += -fprofile-arcs
 
-cov: luacartesi
-	$(LUA_BIN) ./cartesi-machine-tests.lua
-	$(LUA_BIN) ./test-machine.lua
-	$(LUA_BIN) ./cartesi-machine.lua --cmdline='-- /bin/true'
+coverage-build-gcc: CXXFLAGS += -O0 -g --coverage
+coverage-build-gcc: SOLDFLAGS += -lgcov --coverage
+coverage-build-gcc: LIBCARTESI_LDFLAGS += -lgcov --coverage
+coverage-build-gcc: LIBCARTESI_TESTS_LDFLAGS += -lgcov --coverage
+coverage-build-gcc: test
+coverage-calc-gcc: coverage-build-gcc
 	gcov *.cpp
-	lcov --capture --directory . --output-file cartesi.info
-	genhtml cartesi.info --output-directory coverage
+	lcov --capture --directory . --output-file coverage.excessive
+	lcov --remove coverage.excessive '*boost*' '*c++*' '*cryptopp*' -o coverage.info
+
+coverage-build-clang: CXX = clang++
+coverage-build-clang: CXXFLAGS += -fprofile-instr-generate -fcoverage-mapping
+coverage-build-clang: SOLDFLAGS += -fprofile-instr-generate -fcoverage-mapping
+coverage-build-clang: LIBCARTESI_LDFLAGS += -fprofile-instr-generate -fcoverage-mapping
+coverage-build-clang: LIBCARTESI_TESTS_LDFLAGS += -fprofile-instr-generate -fcoverage-mapping
+coverage-build-clang: test
+coverage-calc-clang:
+	llvm-profdata merge -sparse $(shell find . -name '*profraw' | xargs) -o coverage.profdata
+	llvm-cov show ./cartesi.so -instr-profile=coverage.profdata > coverage.txt
 
 
 valgrind: luacartesi
