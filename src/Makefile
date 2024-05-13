@@ -86,7 +86,7 @@ BOOST_INC=-I$(PORT_PREFIX)/libexec/boost/1.81/include
 SLIRP_LIB=-L$(PORT_PREFIX)/lib -lslirp
 SLIRP_INC=-I$(PORT_PREFIX)/include
 else
-$(error Neither Homebrew nor MacPorts is installed)
+$(warning Neither Homebrew nor MacPorts is installed)
 endif
 
 LIBCARTESI=libcartesi-$(EMULATOR_VERSION_MAJOR).$(EMULATOR_VERSION_MINOR).dylib
